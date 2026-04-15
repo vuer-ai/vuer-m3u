@@ -5,9 +5,8 @@ import { JsonlPlayer } from '../src/react/players/JsonlPlayer';
 import { SubtitlePlayer } from '../src/react/players/SubtitlePlayer';
 import { CanvasTrackPlayer } from '../src/react/players/CanvasTrackPlayer';
 
-// Public HLS test stream (proxied via Vite dev server to avoid CORS)
-const VIDEO_URL =
-  '/apple-hls/videos/streaming/examples/bipbop_16x9/bipbop_16x9_variant.m3u8';
+// Local HLS video (30s clip, served from demo/mock-data/video/)
+const VIDEO_URL = '/video/playlist.m3u8';
 
 // Local mock data (served by Vite from demo/mock-data/ via publicDir)
 const ANNOTATIONS_URL = '/annotations/playlist.m3u8';

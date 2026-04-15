@@ -15,5 +15,6 @@
     "declarationMap": true,
     "noEmit": true
   },
-  "include": ["src", "demo", "tests"]
+  "include": ["src", "demo", "tests"],
+  "exclude": ["demo/mock-data/**/*.ts"]
 }

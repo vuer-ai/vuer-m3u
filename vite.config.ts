@@ -18,15 +18,6 @@ export default defineConfig({
     },
     outDir: 'dist',
   },
-  server: {
-    proxy: {
-      '/apple-hls': {
-        target: 'https://devstreaming-cdn.apple.com',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/apple-hls/, ''),
-      },
-    },
-  },
   test: {
     environment: 'node',
   },
