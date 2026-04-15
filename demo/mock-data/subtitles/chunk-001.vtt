@@ -1,0 +1,19 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:02.500
+System initialized. All sensors online.
+
+00:00:02.500 --> 00:00:05.000
+Moving robot arm to home position...
+
+00:00:05.000 --> 00:00:07.500
+Calibrating front camera.
+
+00:00:07.500 --> 00:00:10.000
+Opening gripper. Ready for task.
+
+00:00:10.000 --> 00:00:12.500
+Object detected: red cube at [0.3, 0.1, 0.5]
+
+00:00:12.500 --> 00:00:15.000
+Planning optimal grasp trajectory...
