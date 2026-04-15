@@ -179,6 +179,7 @@ const { engine, playlist } = usePlaylistEngine(
 
 ## Documentation
 
+- **[CUSTOM_PLAYER_GUIDE.md](docs/CUSTOM_PLAYER_GUIDE.md)** — how to build your own player with `useSegment` or `useTrackData`
 - **[DESIGN.md](docs/DESIGN.md)** — API reference and design overview
 - **[EXAMPLES.md](docs/EXAMPLES.md)** — 13 usage examples
 - **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** — data flow diagrams, event model, performance analysis
