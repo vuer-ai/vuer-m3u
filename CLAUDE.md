@@ -1,4 +1,4 @@
-# Project: @vuer-ai/m3u8
+# Project: @vuer-ai/tinyplay
 
 Generalized m3u8 playlist engine for any time-segmented data (JSONL, VTT, binary, video).
 

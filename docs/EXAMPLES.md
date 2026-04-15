@@ -3,7 +3,7 @@
 ## 1. Minimal
 
 ```tsx
-import { useTimeline, useClockValue, TimelineController, JsonlPlayer } from '@vuer-ai/m3u8';
+import { useTimeline, useClockValue, TimelineController, JsonlPlayer } from '@vuer-ai/tinyplay';
 
 function App() {
   const { clock, state, play, pause, seek, setPlaybackRate } = useTimeline();
@@ -27,7 +27,7 @@ Duration auto-detected from the playlist.
 import {
   useTimeline, TimelineController,
   VideoPlayer, JsonlPlayer, SubtitlePlayer, CanvasTrackPlayer,
-} from '@vuer-ai/m3u8';
+} from '@vuer-ai/tinyplay';
 
 function App() {
   const { clock, state, play, pause, seek, setPlaybackRate, setLoop } = useTimeline();
@@ -54,7 +54,7 @@ Multiple playlists with different durations → clock auto-extends to max.
 `useTimeline` state does NOT include `currentTime`. Use `useClockValue` at the fps you need:
 
 ```tsx
-import { useTimeline, useClockValue } from '@vuer-ai/m3u8';
+import { useTimeline, useClockValue } from '@vuer-ai/tinyplay';
 
 function MyComponent() {
   const { clock } = useTimeline();
@@ -75,7 +75,7 @@ clock.on('tick', (e) => {
 ## 4. Core API Without React
 
 ```typescript
-import { PlaylistEngine, TimelineClock } from '@vuer-ai/m3u8';
+import { PlaylistEngine, TimelineClock } from '@vuer-ai/tinyplay';
 
 const engine = new PlaylistEngine({ url: '/data.m3u8' });
 const playlist = await engine.init();
@@ -96,7 +96,7 @@ clock.destroy();
 ## 5. Custom Decoder — Global
 
 ```typescript
-import { registerDecoder } from '@vuer-ai/m3u8';
+import { registerDecoder } from '@vuer-ai/tinyplay';
 import { decode } from '@msgpack/msgpack';
 
 registerDecoder('mpk', (raw) => decode(new Uint8Array(raw)));
@@ -200,7 +200,7 @@ function SensorPlayer({ playlistUrl, clock }: { playlistUrl: string; clock: Time
 `useTrackData` loads and merges segments into contiguous `Float32Array`s. It does NOT interpolate — that's up to the consumer.
 
 ```tsx
-import { usePlaylistEngine, useTrackData, useClockValue, findBracket } from '@vuer-ai/m3u8';
+import { usePlaylistEngine, useTrackData, useClockValue, findBracket } from '@vuer-ai/tinyplay';
 
 function TrackViewer({ playlistUrl, clock }) {
   const { engine } = usePlaylistEngine({ url: playlistUrl }, clock);

@@ -1,4 +1,4 @@
-# @vuer-ai/m3u8
+# @vuer-ai/tinyplay
 
 Generalized m3u8 playlist engine for any time-segmented data — not just video.
 
@@ -7,7 +7,7 @@ Standard HLS maps time ranges to video segments. This library extends the m3u8 f
 ## Install
 
 ```bash
-npm install @vuer-ai/m3u8
+npm install @vuer-ai/tinyplay
 ```
 
 React 18+ is a peer dependency for the hooks and components. The core engine (`PlaylistEngine`, `TimelineClock`) works without React.
@@ -15,7 +15,7 @@ React 18+ is a peer dependency for the hooks and components. The core engine (`P
 ## Quick Start
 
 ```tsx
-import { useTimeline, TimelineController, JsonlPlayer } from '@vuer-ai/m3u8';
+import { useTimeline, TimelineController, JsonlPlayer } from '@vuer-ai/tinyplay';
 
 function App() {
   const { clock, state, play, pause, seek, setPlaybackRate } = useTimeline();
@@ -142,7 +142,7 @@ chunk-002.jsonl
 
 ```typescript
 // Global — by chunkFormat name
-import { registerDecoder } from '@vuer-ai/m3u8';
+import { registerDecoder } from '@vuer-ai/tinyplay';
 registerDecoder('mpk', (raw) => decode(new Uint8Array(raw)));
 
 // Per-engine — for unnamed binary formats

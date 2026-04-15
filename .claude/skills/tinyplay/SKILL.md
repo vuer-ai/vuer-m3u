@@ -1,17 +1,17 @@
 ---
-name: m3u8
-description: "Use @vuer-ai/m3u8 to build time-synchronized players for any data format. Covers TimelineClock, PlaylistEngine, React hooks (useTimeline, useSegment, useTrackData, useClockValue), player components, custom decoders, and m3u8 playlist authoring."
+name: tinyplay
+description: "Use @vuer-ai/tinyplay to build time-synchronized players for any data format. Covers TimelineClock, PlaylistEngine, React hooks (useTimeline, useSegment, useTrackData, useClockValue), player components, custom decoders, and m3u8 playlist authoring."
 paths: "**/*.ts,**/*.tsx,**/*.m3u8"
 ---
 
-# @vuer-ai/m3u8 — Usage Guide
+# @vuer-ai/tinyplay — Usage Guide
 
-You are helping a developer use the `@vuer-ai/m3u8` library. This library generalizes HLS m3u8 playlists beyond video — any time-segmented data (JSONL, VTT, binary, sensor data) can be loaded, cached, prefetched, and played back through a shared timeline.
+You are helping a developer use the `@vuer-ai/tinyplay` library. This library generalizes HLS m3u8 playlists beyond video — any time-segmented data (JSONL, VTT, binary, sensor data) can be loaded, cached, prefetched, and played back through a shared timeline.
 
 ## Install
 
 ```bash
-pnpm add @vuer-ai/m3u8
+pnpm add @vuer-ai/tinyplay
 ```
 
 Peer dependency: React 18+. Core engine works without React.
@@ -19,7 +19,7 @@ Peer dependency: React 18+. Core engine works without React.
 ## Quick Start — React
 
 ```tsx
-import { useTimeline, TimelineController, JsonlPlayer } from '@vuer-ai/m3u8';
+import { useTimeline, TimelineController, JsonlPlayer } from '@vuer-ai/tinyplay';
 
 function App() {
   const { clock, state, play, pause, seek, setPlaybackRate, setLoop } = useTimeline();
@@ -41,7 +41,7 @@ function App() {
 ## Core API (no React)
 
 ```typescript
-import { PlaylistEngine, TimelineClock } from '@vuer-ai/m3u8';
+import { PlaylistEngine, TimelineClock } from '@vuer-ai/tinyplay';
 
 const engine = new PlaylistEngine({ url: '/data.m3u8' });
 const playlist = await engine.init();
@@ -119,7 +119,7 @@ All accept `{ playlistUrl: string, clock: TimelineClock }`:
 
 ```typescript
 // Global — by chunkFormat name in m3u8 header
-import { registerDecoder } from '@vuer-ai/m3u8';
+import { registerDecoder } from '@vuer-ai/tinyplay';
 registerDecoder('mpk', (raw) => decode(new Uint8Array(raw)));
 
 // Per-engine — for unnamed binary formats
