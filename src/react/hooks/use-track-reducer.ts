@@ -138,6 +138,36 @@ export function useTrackReducer(
     (decoded: unknown): RawSegmentData | null => {
       if (!decoded) return null;
 
+      // New envelope format: { ts, te, dtype, shape, payload: [{ts, data}, ...] }
+      if (
+        typeof decoded === 'object' &&
+        decoded !== null &&
+        !Array.isArray(decoded) &&
+        Array.isArray((decoded as { payload?: unknown }).payload)
+      ) {
+        const envelope = decoded as { payload: Array<{ ts: number; data: number | number[] }> };
+        const samples = envelope.payload;
+        if (samples.length === 0) return null;
+
+        const first = samples[0].data;
+        const stride = Array.isArray(first) ? first.length : 1;
+
+        const times: number[] = [];
+        const values: number[] = [];
+        for (const s of samples) {
+          times.push(s.ts);
+          if (Array.isArray(s.data)) {
+            values.push(...s.data);
+          } else if (typeof s.data === 'number') {
+            values.push(s.data);
+          }
+        }
+
+        // Single track named 'data' — views read the uniform `data` field
+        return { data: { times, values, stride } };
+      }
+
+      // Legacy format A: array of { t, fieldname: number | number[] }
       if (Array.isArray(decoded) && decoded.length > 0 && 't' in decoded[0]) {
         const entries = decoded as Array<Record<string, unknown>>;
         const result: RawSegmentData = {};
@@ -166,6 +196,7 @@ export function useTrackReducer(
         return result;
       }
 
+      // Legacy format B: pre-structured track dict
       if (typeof decoded === 'object' && decoded !== null && !Array.isArray(decoded)) {
         return decoded as RawSegmentData;
       }

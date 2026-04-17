@@ -2,8 +2,10 @@ import type { SegmentDecoder } from '../types';
 import { jsonlDecoder } from './jsonl';
 import { textDecoder } from './text';
 import { rawDecoder } from './raw';
+import { envelopeDecoder } from './envelope';
 
 const DECODERS: Record<string, SegmentDecoder> = {
+  json: envelopeDecoder,
   jsonl: jsonlDecoder,
   vtt: textDecoder,
   ts: rawDecoder,
@@ -31,4 +33,4 @@ export function registerDecoder(format: string, decoder: SegmentDecoder): void {
   DECODERS[format] = decoder;
 }
 
-export { jsonlDecoder, textDecoder, rawDecoder };
+export { jsonlDecoder, textDecoder, rawDecoder, envelopeDecoder };

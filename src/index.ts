@@ -5,7 +5,12 @@ export { SegmentLoader } from './core/segment-loader';
 export { Playlist } from './core/playlist';
 export { TimelineClock } from './core/timeline';
 export { findBracket } from './core/find-bracket';
-export { getDecoder, registerDecoder, jsonlDecoder, textDecoder, rawDecoder } from './core/decoders';
+export { getDecoder, registerDecoder, jsonlDecoder, textDecoder, rawDecoder, envelopeDecoder } from './core/decoders';
+
+// Robot data layer
+export { KINDS, getKind, registerKind } from './robot/kinds';
+export type { Shape, ContinuousShape, ChunkEnvelope, ContinuousSample, EventEntry } from './robot/shapes';
+export type { Kind, KindDefinition } from './robot/kinds';
 
 // Types
 export type {
