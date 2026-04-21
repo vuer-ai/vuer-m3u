@@ -1,4 +1,4 @@
-{"start":10.0,"end":12.5,"text":"Object detected at position [0.3, 0.1, 0.5]","type":"event","metadata":{"confidence":0.95,"object":"red_cube"}}
-{"start":12.5,"end":15.0,"text":"Planning grasp trajectory","type":"action","metadata":{"planner":"RRT*","iterations":1200}}
-{"start":15.0,"end":17.5,"text":"Executing grasp approach","type":"action","metadata":{"velocity":0.2,"force_limit":10}}
-{"start":17.5,"end":20.0,"text":"Grasp successful - force 4.2N","type":"event","metadata":{"force":4.2,"slip_detected":false}}
+{"ts": 10.0, "te": 12.5, "label": "Object detected at position [0.3, 0.1, 0.5]", "type": "event", "metadata": {"confidence": 0.95, "object": "red_cube"}}
+{"ts": 12.5, "te": 15.0, "label": "Planning grasp trajectory", "type": "action", "metadata": {"planner": "RRT*", "iterations": 1200}}
+{"ts": 15.0, "te": 17.5, "label": "Executing grasp approach", "type": "action", "metadata": {"velocity": 0.2, "force_limit": 10}}
+{"ts": 17.5, "te": 20.0, "label": "Grasp successful - force 4.2N", "type": "event", "metadata": {"force": 4.2, "slip_detected": false}}

@@ -2,24 +2,26 @@ import { useEffect, useRef, useState } from 'react';
 import { Playlist } from '../../core/playlist';
 import type { TimelineClock } from '../../core/timeline';
 import type { ParsedPlaylist, PlaylistOptions } from '../../core/types';
+import { useClockContext } from '../clock-context';
 
 /**
- * Creates and manages a Playlist. Optionally syncs duration to a clock.
+ * Creates and manages a Playlist and syncs duration to a clock.
  *
- * When `clock` is provided:
- * - clock.duration is auto-extended from playlist.totalDuration on init
- * - clock.duration is auto-extended when live playlist discovers new segments
+ * Resolves the clock from an explicit argument or from `<ClockProvider>`.
+ * The clock's duration is auto-extended from `playlist.totalDuration` on init
+ * and whenever a live playlist discovers new segments.
  */
 export function usePlaylist(
   options: PlaylistOptions,
-  clock?: TimelineClock,
+  clock?: TimelineClock | null,
 ) {
+  const resolvedClock = useClockContext(clock);
   const [playlist, setPlaylist] = useState<ParsedPlaylist | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const engineRef = useRef<Playlist | null>(null);
-  const clockRef = useRef(clock);
-  clockRef.current = clock;
+  const clockRef = useRef(resolvedClock);
+  clockRef.current = resolvedClock;
 
   useEffect(() => {
     const engine = new Playlist(options);

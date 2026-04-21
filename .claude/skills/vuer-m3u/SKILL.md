@@ -1,6 +1,6 @@
 ---
 name: vuer-m3u
-description: "Use @vuer-ai/vuer-m3u to build time-synchronized views for any data format. Covers TimelineClock, Playlist, React hooks (useTimeline, useSegment, useTrackReducer, useClockValue), view components, custom decoders, and m3u8 playlist authoring."
+description: "Use @vuer-ai/vuer-m3u to build time-synchronized views for any data format. Covers TimelineClock, Playlist, ClockProvider, React hooks (useTimeline, useSegment, useSegmentTrack, useMergedTrack, useTrackSample, useClockValue), pre-built robot-data views, custom decoders, and m3u8 playlist authoring."
 paths: "**/*.ts,**/*.tsx,**/*.m3u8"
 ---
 
@@ -19,24 +19,36 @@ Peer dependency: React 18+. Core engine works without React.
 ## Quick Start — React
 
 ```tsx
-import { useTimeline, TimelineController, JsonlView } from '@vuer-ai/vuer-m3u';
+import {
+  useTimeline,
+  ClockProvider,
+  TimelineController,
+  ActionLabelView,
+  JointAngleView,
+} from '@vuer-ai/vuer-m3u';
 
 function App() {
   const { clock, state, play, pause, seek, setPlaybackRate, setLoop } = useTimeline();
   return (
-    <div>
-      <JsonlView src="/annotations.m3u8" clock={clock} />
-      <TimelineController clock={clock} state={state}
-        onPlay={play} onPause={pause} onSeek={seek}
-        onSpeedChange={setPlaybackRate} onLoopChange={setLoop} />
-    </div>
+    <ClockProvider clock={clock}>
+      <ActionLabelView src="/annotations.m3u8" />
+      <JointAngleView src="/joints.m3u8" />
+      <TimelineController
+        state={state}
+        onPlay={play}
+        onPause={pause}
+        onSeek={seek}
+        onSpeedChange={setPlaybackRate}
+        onLoopChange={setLoop}
+      />
+    </ClockProvider>
   );
 }
 ```
 
-- Duration is auto-detected from playlist. No hardcoded value needed.
+- Duration is auto-detected from playlist.
 - Multiple views on the same clock → `max(allDurations)`.
-- All view components accept a `clock` prop (not `currentTime`).
+- `ClockProvider` injects the clock via React context. Every hook and view treats `clock` as optional and falls back to the provider. Pass `clock={…}` explicitly when you need to override (for example, a preview timeline alongside the main one).
 
 ## Core API (no React)
 
@@ -47,8 +59,8 @@ const engine = new Playlist({ url: '/data.m3u8' });
 const playlist = await engine.init();
 
 const result = await engine.getDataAtTime(15.3);
-console.log(result?.decoded);  // your data
-console.log(result?.segment);  // which segment
+console.log(result?.decoded);
+console.log(result?.segment);
 
 const clock = new TimelineClock();
 clock.extendDuration(playlist.totalDuration);
@@ -59,70 +71,88 @@ clock.play();
 
 ### useTimeline(duration?)
 Creates a TimelineClock. Returns discrete state that only re-renders on seek events.
-- `clock` — pass to view components
+- `clock` — wrap the subtree in `<ClockProvider clock={clock}>`
 - `state` — `{ duration, playing, playbackRate, loop }` (NO currentTime)
 - Control: `play`, `pause`, `seek`, `setPlaybackRate`, `setLoop`
 
-### useClockValue(clock, fps)
+### useClockValue(fps, clock?)
 Returns `clock.time` throttled to N fps. This is how you get currentTime.
 ```tsx
-const time = useClockValue(clock, 30);  // scrubber UI
-const time = useClockValue(clock, 10);  // segment boundary check
-const time = useClockValue(clock, 4);   // highlight update
+const time = useClockValue(30);  // scrubber UI (clock from context)
+const time = useClockValue(10);  // segment boundary check
+const time = useClockValue(4);   // highlight update
 ```
 
 ### usePlaylist(options, clock?)
 Creates a Playlist. Auto-extends `clock.duration` from playlist.
 ```tsx
-const { engine, playlist, loading, error } = usePlaylist({ url }, clock);
+const { engine, playlist, loading, error } = usePlaylist({ url });
 ```
 
-Options: `url`, `decoder`, `cacheSize` (20), `prefetchCount` (2), `pollInterval`, `fetchFn`.
-
-### useSegment(engine, clock) — discrete data
+### useSegment(engine, clock?) — discrete data
 One decoded segment at a time. For JSONL events, VTT cues.
 ```tsx
-const { data, segment, loading, error } = useSegment<MyType[]>(engine, clock);
+const { data, segment, loading, error } = useSegment<MyType[]>(engine);
 ```
 
-### useTrackReducer(engine, clock) — continuous data
-Merged contiguous segments as Float32Arrays. For position, rotation, sensors.
+### useSegmentTrack(engine, clock?, options?) — current segment, columnar
+Normalizes the current segment into `Map<string, TrackSamples>`. No merging — use when you want binary-search lookup inside one chunk without the prefetch+merge window.
 ```tsx
-const { tracks, mergedRange, loading } = useTrackReducer(engine, clock);
-const pos = tracks.get('position');
-// pos.times: Float32Array, pos.values: Float32Array, pos.stride: number
+const { tracks, segment, loading } = useSegmentTrack(engine);
 ```
 
-Query methods on merged data:
-```typescript
-// Interpolation (O(1) with findBracket)
-const [idx, alpha] = findBracket(pos.times, clock.time, hint);
-const x = pos.values[idx * stride] + (pos.values[(idx+1) * stride] - pos.values[idx * stride]) * alpha;
-
-// Nearest neighbor
-const i = pos.times.findIndex(t => t >= clock.time);
+### useMergedTrack(engine, clock?, options?) — current + neighbors, columnar
+Fetches a window of segments around the current position, normalizes each, and merges contiguous ones into single Float32Arrays. This is the workhorse for smooth interpolation across chunk boundaries.
+```tsx
+const { tracks, mergedRange, loading } = useMergedTrack(engine);            // default = one track named 'data'
+const { tracks } = useMergedTrack(engine, null, { normalize: poseNormalizer }); // multi-track via custom normalizer
 ```
 
-## View Components
+### useTrackSample(track, time, interp?) — query at a time
+```tsx
+const sample = useTrackSample(tracks.get('data'), time);          // lerp
+const rot = useTrackSample(tracks.get('orientation'), time, slerpQuat);
+```
 
-All accept `{ src: string, clock: TimelineClock }`:
+Output is a reused `Float32Array` sized `track.stride` — don't retain across renders.
 
-| Component | Data | Use case |
-|-----------|------|----------|
-| `VideoPlayer` | hls.js | Standard HLS video |
-| `JsonlView` | useSegment | JSONL events/annotations |
-| `SubtitleView` | useSegment | WebVTT subtitles |
-| `CanvasView` | useTrackReducer | Chart + 2D trajectory (mode: 'chart'/'path'/'both') |
-| `TimelineController` | useClockValue | Scrubber UI (also needs `state` from useTimeline) |
+### ClockProvider + useClockContext
+```tsx
+<ClockProvider clock={clock}>  ...  </ClockProvider>
+```
+Resolves the clock for hooks and views in the subtree. Priority: explicit arg → context → throw.
+
+## Which hook for which data?
+
+| Your data is… | Use | Example |
+|---|---|---|
+| Discrete events per segment | `useSegment` | Action labels, VTT cues, log lines |
+| One chunk, columnar | `useSegmentTrack` | Inspector view, custom merge logic |
+| Cross-chunk merged, columnar | `useMergedTrack` | IMU, joints, pose (default use) |
+| Have a merged track, want a precise value | `useTrackSample` | Canvas 60fps, imperative loops |
+
+## Pre-built View Components
+
+All accept `{ src: string; clock?: TimelineClock }` — omit `clock` when inside `<ClockProvider>`.
+
+| Component | JSONL shape | Interpolator |
+|-----------|-------------|--------------|
+| `VideoPlayer` | HLS video (hls.js) | — |
+| `SubtitleView` | WebVTT cues | — |
+| `ActionLabelView` | `{ts, te, label, ...}` | — (discrete) |
+| `DetectionBoxView` | `{ts, te, label, bbox:[x,y,w,h]}` overlay | — (discrete) |
+| `BarTrackView` | generic `{ts, data: number[] \| number}` | lerp |
+| `ImuView` | `{ts, data: [ax,ay,az, gx,gy,gz]}` stride=6 | lerp |
+| `JointAngleView` | `{ts, data: number[]}` stride=N | lerp |
+| `PoseView` | `{ts, data: [x,y,z, qx,qy,qz,qw]}` stride=7 | lerp + slerpQuat |
+| `TimelineController` | scrubber + play/pause + rate + loop | — |
 
 ## Custom Decoder
 
 ```typescript
-// Global — by chunkFormat name in m3u8 header
 import { registerDecoder } from '@vuer-ai/vuer-m3u';
 registerDecoder('mpk', (raw) => decode(new Uint8Array(raw)));
 
-// Per-engine — for unnamed binary formats
 new Playlist({
   url: '/data.m3u8',
   decoder: (raw, segment, playlist) => myCustomDecode(raw),
@@ -131,17 +161,26 @@ new Playlist({
 
 ## Custom View Component
 
-Pattern: `usePlaylist` + `useSegment` or `useTrackReducer` + `useClockValue`.
+Pattern: accept optional clock → `useClockContext` → `usePlaylist` → `useSegment` / `useSegmentTrack` / `useMergedTrack` → render with `useClockValue` or `useTrackSample`.
 
 ```tsx
-function SensorView({ src, clock }: { src: string; clock: TimelineClock }) {
-  const { engine } = usePlaylist({ url: src }, clock);
-  const { data } = useSegment<{ start: number; value: number }[]>(engine, clock);
-  const time = useClockValue(clock, 4);
+import {
+  type TimelineClock,
+  useClockContext,
+  usePlaylist,
+  useSegment,
+  useClockValue,
+} from '@vuer-ai/vuer-m3u';
+
+function SensorView({ src, clock }: { src: string; clock?: TimelineClock | null }) {
+  const resolvedClock = useClockContext(clock);
+  const { engine } = usePlaylist({ url: src }, resolvedClock);
+  const { data } = useSegment<{ ts: number; value: number }[]>(engine, resolvedClock);
+  const time = useClockValue(4, resolvedClock);
 
   if (!data) return <div>Loading...</div>;
   const current = data.reduce((a, b) =>
-    Math.abs(b.start - time) < Math.abs(a.start - time) ? b : a
+    Math.abs(b.ts - time) < Math.abs(a.ts - time) ? b : a,
   );
   return <div>{current.value}</div>;
 }
@@ -162,14 +201,13 @@ chunk-002.jsonl
 #EXT-X-ENDLIST
 ```
 
-- No `#EXT-X-ENDLIST` → live playlist, engine polls automatically
+No `#EXT-X-ENDLIST` → live playlist, engine polls automatically.
 
 ## Live Streaming
 
 ```tsx
 const { engine, playlist } = usePlaylist(
   { url: '/live/stream.m3u8', pollInterval: 3000 },
-  clock,
 );
 // Duration auto-extends as new segments arrive.
 // Polling stops when #EXT-X-ENDLIST appears.
@@ -179,10 +217,11 @@ const { engine, playlist } = usePlaylist(
 
 1. **TimelineClock** is pure time. No playlist/segment knowledge.
 2. **Segment boundaries** tracked per-hook, not on clock. Multiple playlists work correctly.
-3. **Prefetch** automatic in `getDataAtTime()`. No configuration needed for basic use.
+3. **Prefetch** automatic in `getDataAtTime()`.
 4. **VideoPlayer** uses hls.js directly (not Playlist) — different decode pipeline.
-5. **useTimeline state** has no currentTime. Use `useClockValue(clock, fps)`.
-6. **useSegment** = discrete (events, cues). **useTrackReducer** = continuous (position, sensors).
+5. **useTimeline state** has no currentTime. Use `useClockValue(fps)`.
+6. **Clock resolution** is uniform — every consumer accepts optional clock, resolves via `useClockContext`. Errors thrown at render when neither explicit nor context is present.
+7. **useSegment** = raw discrete payload (events, cues). **useSegmentTrack** = one segment → columnar. **useMergedTrack** = current + neighbors merged (IMU, joints, pose). **useTrackSample** = query a track at a time.
 
 ## Documentation
 

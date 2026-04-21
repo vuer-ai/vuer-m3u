@@ -1,4 +1,4 @@
-{"start":0.0,"end":2.5,"text":"System initialization complete","type":"event","metadata":{"severity":"info"}}
-{"start":2.5,"end":5.0,"text":"Robot arm moving to home position","type":"action","metadata":{"joint":"shoulder","velocity":0.5}}
-{"start":5.0,"end":7.5,"text":"Camera calibration started","type":"event","metadata":{"camera":"front_rgb"}}
-{"start":7.5,"end":10.0,"text":"Gripper opening to 80mm","type":"action","metadata":{"gripper_width":80,"force":0.0}}
+{"ts": 0.0, "te": 2.5, "label": "System initialization complete", "type": "event", "metadata": {"severity": "info"}}
+{"ts": 2.5, "te": 5.0, "label": "Robot arm moving to home position", "type": "action", "metadata": {"joint": "shoulder", "velocity": 0.5}}
+{"ts": 5.0, "te": 7.5, "label": "Camera calibration started", "type": "event", "metadata": {"camera": "front_rgb"}}
+{"ts": 7.5, "te": 10.0, "label": "Gripper opening to 80mm", "type": "action", "metadata": {"gripper_width": 80, "force": 0.0}}

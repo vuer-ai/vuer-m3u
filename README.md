@@ -15,48 +15,69 @@ React 18+ is a peer dependency for the hooks and components. The core engine (`P
 ## Quick Start
 
 ```tsx
-import { useTimeline, TimelineController, JsonlView } from '@vuer-ai/vuer-m3u';
+import {
+  useTimeline,
+  ClockProvider,
+  TimelineController,
+  ActionLabelView,
+} from '@vuer-ai/vuer-m3u';
 
 function App() {
   const { clock, state, play, pause, seek, setPlaybackRate } = useTimeline();
 
   return (
-    <div>
-      <JsonlView src="/annotations.m3u8" clock={clock} />
-      <TimelineController clock={clock} state={state}
-        onPlay={play} onPause={pause} onSeek={seek} onSpeedChange={setPlaybackRate} />
-    </div>
+    <ClockProvider clock={clock}>
+      <ActionLabelView src="/annotations.m3u8" />
+      <TimelineController
+        state={state}
+        onPlay={play}
+        onPause={pause}
+        onSeek={seek}
+        onSpeedChange={setPlaybackRate}
+      />
+    </ClockProvider>
   );
 }
 ```
+
+`ClockProvider` hands the clock down to every hook and view in its subtree — no more passing `clock` through every component. You can still pass `clock={…}` explicitly to override.
 
 Duration is auto-detected from the playlist. Multiple views on the same clock → `max(allDurations)`.
 
 ## Multi-Track Sync
 
 ```tsx
-const { clock, state, play, pause, seek, setPlaybackRate, setLoop } = useTimeline();
-
-<VideoPlayer src="/video.m3u8" clock={clock} />
-<JsonlView src="/annotations.m3u8" clock={clock} />
-<CanvasView src="/trajectory.m3u8" clock={clock} mode="both" />
-<SubtitleView src="/subtitles.m3u8" clock={clock} />
-<TimelineController clock={clock} state={state}
-  onPlay={play} onPause={pause} onSeek={seek}
-  onSpeedChange={setPlaybackRate} onLoopChange={setLoop} />
+<ClockProvider clock={clock}>
+  <VideoPlayer src="/video.m3u8" />
+  <ActionLabelView src="/annotations.m3u8" />
+  <JointAngleView src="/joints.m3u8" />
+  <ImuView src="/imu.m3u8" />
+  <PoseView src="/pose.m3u8" />
+  <SubtitleView src="/subtitles.m3u8" />
+  <TimelineController
+    state={state}
+    onPlay={play}
+    onPause={pause}
+    onSeek={seek}
+    onSpeedChange={setPlaybackRate}
+    onLoopChange={setLoop}
+  />
+</ClockProvider>
 ```
 
 ## Architecture
 
 ```
-TimelineClock         Pure time source (tick + seek events). No playlist knowledge.
+TimelineClock    Pure time source (tick + seek events). No playlist knowledge.
   ↓
-Playlist        Parses m3u8, loads segments, LRU cache, auto-prefetch, live poll.
+Playlist         Parses m3u8, loads segments, LRU cache, auto-prefetch, live poll.
   ↓
-useSegment            One segment at a time (JSONL, VTT — discrete data).
-useTrackReducer       Merged contiguous segments (position, sensor — continuous data).
+useSegment       One segment at a time (JSONL events, VTT — discrete data).
+useSegmentTrack  Current segment → columnar tracks (no merge).
+useMergedTrack   Current + contiguous neighbors → merged columnar tracks.
+useTrackSample   Query a merged track at a precise time with a pluggable interpolator.
   ↓
-Components            VideoPlayer, JsonlView, SubtitleView, CanvasView.
+Pre-built views  VideoPlayer, SubtitleView, ImuView, JointAngleView, PoseView, ActionLabelView.
 ```
 
 Each layer has one job. No circular dependencies.
@@ -69,12 +90,12 @@ Pure time source with two events: `tick` (~60fps) and `seek` (user actions).
 
 ```typescript
 const clock = new TimelineClock();
-clock.play();           // start RAF loop
+clock.play();
 clock.pause();
 clock.seek(15.3);
-clock.setRate(2);       // 2x speed
+clock.setRate(2);
 clock.setLoop(true);
-clock.tick(delta);      // external drive (e.g. R3F useFrame)
+clock.tick(delta);
 clock.on('tick', (e) => console.log(e.time));
 ```
 
@@ -86,7 +107,6 @@ Parses m3u8, loads + decodes segments on demand, prefetches ahead, polls for liv
 const engine = new Playlist({ url: '/data.m3u8', prefetchCount: 4 });
 const playlist = await engine.init();
 const result = await engine.getDataAtTime(15.3);
-// result.decoded → your data, result.segment → which segment
 ```
 
 ### M3U8 Format
@@ -104,44 +124,54 @@ chunk-002.jsonl
 #EXT-X-ENDLIST
 ```
 
-- No `#EXT-X-ENDLIST` → live playlist, engine polls for updates
+No `#EXT-X-ENDLIST` → live playlist, engine polls for updates.
 
 ## React Hooks
 
 | Hook | Purpose |
 |------|---------|
 | `useTimeline(duration?)` | Clock + discrete state (playing, rate, loop, duration) |
-| `useClockValue(clock, fps)` | Throttled `clock.time` at N fps |
+| `useClockValue(fps, clock?)` | Throttled `clock.time` at N fps |
 | `usePlaylist(options, clock?)` | Engine lifecycle + auto duration sync |
-| `useSegment(engine, clock)` | One decoded segment at a time (discrete data) |
-| `useTrackReducer(engine, clock)` | Merged Float32Arrays for interpolation (continuous data) |
+| `useSegment(engine, clock?)` | One decoded segment at a time (discrete data) |
+| `useSegmentTrack(engine, clock?, options?)` | Current segment → `Map<string, TrackSamples>` (no merge) |
+| `useMergedTrack(engine, clock?, options?)` | Current + contiguous neighbors → `Map<string, TrackSamples>` |
+| `useTrackSample(track, time, interp?)` | Interpolated sample at a precise time |
+| `ClockProvider` + `useClockContext` | Hand a clock down the tree via React context |
 
-### useSegment vs useTrackReducer
+All consumer hooks and views treat `clock` as optional — they fall back to the nearest `<ClockProvider>`. If neither is available the hook throws a descriptive error.
 
-| | useSegment | useTrackReducer |
+### Which hook for which data?
+
+| Your data is… | Use | Example |
 |---|---|---|
-| Data type | JSONL events, VTT cues | Position, rotation, sensors |
-| Returns | One decoded segment (any type) | Merged `Float32Array`s per track |
-| Needs interpolation? | No | Yes (`findBracket` + lerp) |
+| Discrete events (each segment holds a list) | `useSegment` | Action labels, VTT cues, log lines |
+| Continuous time-series, one chunk at a time | `useSegmentTrack` | Inspector view, custom merge logic |
+| Continuous time-series, smooth across chunks | `useMergedTrack` | IMU, joints, pose (default) |
+| Already have a `TrackSamples`, want the value at one time | `useTrackSample` | Canvas 60fps animations, imperative loops |
 
-## View Components
+## Pre-built View Components
 
-| Component | Data | Render fps |
+| Component | Data | Source fps (suggested) |
 |-----------|------|------------|
-| `VideoPlayer` | hls.js native | 0 (seek events only) |
-| `JsonlView` | `useSegment` | ~10 |
-| `SubtitleView` | `useSegment` | ~10 |
-| `CanvasView` | `useTrackReducer` | 60 (canvas, 0 React) |
-| `TimelineController` | `useClockValue` | ~30 |
+| `VideoPlayer` | HLS video (hls.js) | native |
+| `SubtitleView` | WebVTT cues | event-driven |
+| `ActionLabelView` | `{ts, te, label}` discrete events | event-driven |
+| `DetectionBoxView` | bbox overlay `{ts, te, label, bbox:[x,y,w,h]}` | event-driven |
+| `BarTrackView` | generic N-channel continuous `{ts, data}` | any |
+| `ImuView` | `{ts, data: [ax,ay,az, gx,gy,gz]}` | 50–200 Hz |
+| `JointAngleView` | `{ts, data: number[]}` N-DoF angles | 30–250 Hz |
+| `PoseView` | `{ts, data: [x,y,z, qx,qy,qz,qw]}` 6DoF | 30–120 Hz |
+| `TimelineController` | scrubber + play/pause + rate + loop | — |
+
+Each view's file JSDoc documents its JSONL schema. The full contract (including Python data-generation snippets) lives in the `views/` section of the docs.
 
 ## Custom Decoders
 
 ```typescript
-// Global — by chunkFormat name
 import { registerDecoder } from '@vuer-ai/vuer-m3u';
 registerDecoder('mpk', (raw) => decode(new Uint8Array(raw)));
 
-// Per-engine — for unnamed binary formats
 new Playlist({
   url: '/data.m3u8',
   decoder: (raw, segment, playlist) => myCustomDecode(raw),

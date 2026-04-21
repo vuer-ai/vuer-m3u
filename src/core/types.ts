@@ -74,6 +74,19 @@ export interface PlaylistOptions {
   fetchFn?: typeof fetch;
 }
 
+// ---- Track types ----
+
+/**
+ * One named track's interpolatable data after merging contiguous segments.
+ * `times` and `values` are parallel Float32Arrays; `values[i*stride..i*stride+stride]`
+ * is the sample at `times[i]`.
+ */
+export interface TrackSamples {
+  times: Float32Array;
+  values: Float32Array;
+  stride: number;
+}
+
 // ---- React state types ----
 
 export interface SegmentState<T = unknown> {

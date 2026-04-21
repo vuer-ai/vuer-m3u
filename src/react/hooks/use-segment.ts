@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Playlist } from '../../core/playlist';
-import type { PlaylistSegment, SegmentState } from '../../core/types';
+import type { SegmentState } from '../../core/types';
 import type { TimelineClock } from '../../core/timeline';
 import { resolveSegment } from '../../core/segment-resolver';
 import { useClockValue } from './use-clock-value';
+import { useClockContext } from '../clock-context';
 
 /**
  * React hook that returns decoded segment data for the current time.
@@ -14,11 +15,14 @@ import { useClockValue } from './use-clock-value';
  *
  * Re-renders only when the active segment changes, plus at ~4fps for
  * boundary checking during playback.
+ *
+ * Clock is resolved from the explicit argument or `<ClockProvider>`.
  */
 export function useSegment<T = unknown>(
   engine: Playlist | null,
-  clock: TimelineClock,
+  clock?: TimelineClock | null,
 ): SegmentState<T> {
+  const resolvedClock = useClockContext(clock);
   const [state, setState] = useState<SegmentState<T>>({
     data: null,
     segment: null,
@@ -29,8 +33,7 @@ export function useSegment<T = unknown>(
   const lastSegmentIndexRef = useRef(-1);
   const loadingRef = useRef(false);
 
-  // Poll clock.time at ~10fps to detect segment boundary crossings
-  const currentTime = useClockValue(clock, 10);
+  const currentTime = useClockValue(10, resolvedClock);
 
   const loadSegment = useCallback(
     async (time: number) => {
@@ -77,12 +80,12 @@ export function useSegment<T = unknown>(
 
   // Also reload on explicit seek
   useEffect(() => {
-    const unsub = clock.on('seek', (e) => {
+    const unsub = resolvedClock.on('seek', (e) => {
       lastSegmentIndexRef.current = -1; // force reload
       loadSegment(e.time);
     });
     return unsub;
-  }, [clock, loadSegment]);
+  }, [resolvedClock, loadSegment]);
 
   return state;
 }

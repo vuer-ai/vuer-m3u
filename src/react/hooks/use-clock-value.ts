@@ -1,25 +1,25 @@
 import { useCallback, useSyncExternalStore } from 'react';
 import type { TimelineClock } from '../../core/timeline';
+import { useClockContext } from '../clock-context';
 
 /**
  * Subscribe to clock.time at a throttled frame rate.
  *
- * Returns a stable number that updates at most `fps` times per second
- * during playback (tick events), and immediately on seek events.
+ * Pass `clock` explicitly, or omit it and provide one via `<ClockProvider>`.
  *
  * @example
- * const time = useClockValue(clock, 4);   // 4fps — JSONL entry highlight
- * const time = useClockValue(clock, 10);  // 10fps — subtitle cue check
- * const time = useClockValue(clock, 30);  // 30fps — scrubber UI
+ * const time = useClockValue(4);   // 4fps — JSONL entry highlight (from context)
+ * const time = useClockValue(10, clock);  // 10fps — explicit clock override
  */
-export function useClockValue(clock: TimelineClock, fps: number): number {
+export function useClockValue(fps: number, clock?: TimelineClock | null): number {
+  const resolved = useClockContext(clock);
   const interval = 1000 / fps;
 
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
       let lastNotify = 0;
 
-      const unsubTick = clock.on('tick', () => {
+      const unsubTick = resolved.on('tick', () => {
         const now = performance.now();
         if (now - lastNotify >= interval) {
           lastNotify = now;
@@ -27,8 +27,7 @@ export function useClockValue(clock: TimelineClock, fps: number): number {
         }
       });
 
-      // Seek always triggers immediate update
-      const unsubSeek = clock.on('seek', () => {
+      const unsubSeek = resolved.on('seek', () => {
         lastNotify = performance.now();
         onStoreChange();
       });
@@ -38,8 +37,8 @@ export function useClockValue(clock: TimelineClock, fps: number): number {
         unsubSeek();
       };
     },
-    [clock, interval],
+    [resolved, interval],
   );
 
-  return useSyncExternalStore(subscribe, () => clock.time);
+  return useSyncExternalStore(subscribe, () => resolved.time);
 }

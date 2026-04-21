@@ -4,7 +4,7 @@ import type { TimelineState } from '../core/types';
 import { useClockValue } from './hooks/use-clock-value';
 
 interface TimelineControllerProps {
-  clock: TimelineClock;
+  clock?: TimelineClock | null;
   state: TimelineState;
   onPlay: () => void;
   onPause: () => void;
@@ -33,7 +33,7 @@ export function TimelineController({
   const [hoverTime, setHoverTime] = useState<number | null>(null);
 
   // Scrubber position at ~30fps — TimelineController decides its own render frequency
-  const currentTime = useClockValue(clock, 30);
+  const currentTime = useClockValue(30, clock);
 
   const progress = state.duration > 0 ? (currentTime / state.duration) * 100 : 0;
 

@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { usePlaylist } from '../hooks/use-playlist';
 import { useSegment } from '../hooks/use-segment';
 import { useClockValue } from '../hooks/use-clock-value';
+import { useClockContext } from '../clock-context';
 import type { TimelineClock } from '../../core/timeline';
 
 interface VttCue {
@@ -12,20 +13,38 @@ interface VttCue {
 
 interface SubtitleViewProps {
   src: string;
-  clock: TimelineClock;
+  clock?: TimelineClock | null;
   className?: string;
 }
 
 /**
- * View component for WebVTT subtitle tracks.
- * Subscribes to tick at ~10fps to update the displayed cue.
+ * SubtitleView
+ *
+ * ## Data format contract
+ *
+ * Chunks: WebVTT (`.vtt`), standard W3C WebVTT format — not JSONL.
+ *
+ * File shape:
+ *   WEBVTT
+ *
+ *   HH:MM:SS.mmm --> HH:MM:SS.mmm
+ *   Cue text
+ *
+ * Constraints:
+ *   - Cue timestamps are absolute seconds on the playlist timeline
+ *   - Only one active cue is displayed at a time
+ *
+ * How the view renders:
+ *   Parses VTT once per segment. Polls `clock.time` at ~10fps and displays
+ *   whichever cue's `[start, end)` contains the current time.
  */
 export function SubtitleView({ src, clock, className }: SubtitleViewProps) {
-  const { engine } = usePlaylist({ url: src }, clock);
-  const { data: rawVtt } = useSegment<string>(engine, clock);
+  const resolvedClock = useClockContext(clock);
+  const { engine } = usePlaylist({ url: src }, resolvedClock);
+  const { data: rawVtt } = useSegment<string>(engine, resolvedClock);
 
   // ~10fps for subtitle cue changes
-  const currentTime = useClockValue(clock, 10);
+  const currentTime = useClockValue(10, resolvedClock);
 
   const cues = useMemo(() => {
     if (!rawVtt) return [];
