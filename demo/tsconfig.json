@@ -11,7 +11,13 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@vuer-ai/vuer-m3u": ["../src/index.ts"],
+      "@vuer-ai/vuer-m3u/preview": ["../src/preview/index.ts"],
+      "@vuer-ai/vuer-m3u/styles.css": ["../src/styles.css"]
+    }
   },
   "include": ["."],
   "exclude": ["mock-data/**/*.ts", "node_modules", "dist"]

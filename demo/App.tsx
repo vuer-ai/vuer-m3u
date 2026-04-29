@@ -12,8 +12,16 @@ import {
   JointAngleView,
   PoseView,
 } from '@vuer-ai/vuer-m3u';
+import { FilePreview, type Fetcher } from '@vuer-ai/vuer-m3u/preview';
 import { TimelineDemo } from './TimelineDemo';
 import { ThemeToggle } from './ThemeToggle';
+
+// Vite's dev server (and most SPA hosts) fall back to index.html for any
+// path that isn't a static file, so a "missing URL" returns 200 OK with
+// HTML instead of a real 404. The 404 demo card injects this synthetic
+// fetcher so ErrorState renders deterministically regardless of host.
+const fakeNotFoundFetcher: Fetcher = async () =>
+  new Response('Not Found', { status: 404, statusText: 'Not Found' });
 
 const VIDEO_URL = '/video/playlist.m3u8';
 const ANNOTATIONS_URL = '/annotations/playlist.m3u8';
@@ -215,6 +223,94 @@ export function App() {
         >
           <WithController>{() => <PoseView src={POSE_URL} />}</WithController>
         </Section>
+
+        <div className="lg:col-span-2">
+          <Section
+            title="File Preview"
+            description="Generic preview for any URL — independent of timeline / dtype. Dispatches on file extension to the appropriate previewer (image, markdown, csv, jsonl, code, npy, …) with hard / soft size limits."
+          >
+            <div className="p-4 space-y-4">
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                Each card below renders{' '}
+                <code className="text-indigo-600 dark:text-indigo-300">
+                  &lt;FilePreview&gt;
+                </code>{' '}
+                from{' '}
+                <code className="text-indigo-600 dark:text-indigo-300">
+                  @vuer-ai/vuer-m3u/preview
+                </code>{' '}
+                against a fixture under{' '}
+                <code className="text-indigo-600 dark:text-indigo-300">
+                  /preview/
+                </code>
+                .
+              </p>
+
+              <FilePreview
+                url="/preview/images/sample.svg"
+                filename="sample.svg"
+                size={1500}
+              />
+              <FilePreview url="/preview/markdown/README.md" />
+              <FilePreview url="/preview/tabular/small.csv" />
+              <FilePreview url="/preview/tabular/events.jsonl" />
+              <FilePreview url="/preview/code/sample.py" />
+              <FilePreview url="/preview/code/sample.json" />
+              <FilePreview url="/preview/code/sample.yaml" />
+              <FilePreview url="/preview/code/sample.txt" />
+              <FilePreview url="/preview/npy/joints_small.npy" />
+              <FilePreview url="/preview/mcap/sample.mcap" />
+
+              <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 pt-4 border-t border-zinc-200 dark:border-zinc-800">
+                Edge cases
+              </h3>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 -mt-3">
+                The three cards below intentionally trigger non-happy-path
+                states so you can see the fallback UIs.
+              </p>
+
+              <div>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-1">
+                  <strong>Too large</strong> — passes a fake{' '}
+                  <code>size=50&nbsp;MB</code> with{' '}
+                  <code>filename="huge.png"</code> so the image hard-limit
+                  triggers <code>TooLargeState</code>.
+                </p>
+                <FilePreview
+                  url="/preview/images/sample.svg"
+                  filename="huge.png"
+                  size={50_000_000}
+                />
+              </div>
+
+              <div>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-1">
+                  <strong>Unsupported extension</strong> — <code>.zip</code>{' '}
+                  isn't in the dispatch table, so dispatch resolves to{' '}
+                  <code>UnsupportedState</code> with a download button.
+                </p>
+                <FilePreview
+                  url="/preview/misc/archive.zip"
+                  filename="archive.zip"
+                />
+              </div>
+
+              <div>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-1">
+                  <strong>Fetch failure (404)</strong> — uses a custom{' '}
+                  <code>fetcher</code> that synthesizes a 404 response so
+                  the CSV previewer renders <code>ErrorState</code>{' '}
+                  deterministically (Vite's SPA fallback would otherwise
+                  serve <code>index.html</code> for missing paths).
+                </p>
+                <FilePreview
+                  url="/preview/missing/nonexistent.csv"
+                  fetcher={fakeNotFoundFetcher}
+                />
+              </div>
+            </div>
+          </Section>
+        </div>
       </main>
     </div>
   );

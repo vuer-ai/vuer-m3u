@@ -1,0 +1,30 @@
+{"ts": 0.2536, "type": "scroll", "data": {"dx": 71.4}}
+{"ts": 0.6551, "type": "click", "data": {"x": 1040, "y": 601}}
+{"ts": 0.7906, "type": "scroll", "data": {"dx": -4.8}}
+{"ts": 1.1169, "type": "frame", "data": {"frame_id": 3, "width": 640, "height": 480}}
+{"ts": 1.2093, "type": "detection", "data": {"class": "person", "score": 0.453}}
+{"ts": 1.6236, "type": "heartbeat", "data": {"seq": 5, "cpu": 49.66}}
+{"ts": 1.8519, "type": "click", "data": {"x": 1260, "y": 665}}
+{"ts": 1.9728, "type": "heartbeat", "data": {"seq": 7, "cpu": 67.38}}
+{"ts": 2.0512, "type": "heartbeat", "data": {"seq": 8, "cpu": 19.27}}
+{"ts": 2.2101, "type": "heartbeat", "data": {"seq": 9, "cpu": 63.36}}
+{"ts": 2.4069, "type": "scroll", "data": {"dx": 68.5}}
+{"ts": 2.6905, "type": "detection", "data": {"class": "cup", "score": 0.403}}
+{"ts": 2.7787, "type": "detection", "data": {"class": "cup", "score": 0.989}}
+{"ts": 3.2768, "type": "heartbeat", "data": {"seq": 13, "cpu": 58.09}}
+{"ts": 3.4687, "type": "frame", "data": {"frame_id": 14, "width": 640, "height": 480}}
+{"ts": 3.7495, "type": "heartbeat", "data": {"seq": 15, "cpu": 10.27}}
+{"ts": 4.1443, "type": "click", "data": {"x": 220, "y": 297}}
+{"ts": 4.3682, "type": "heartbeat", "data": {"seq": 17, "cpu": 68.55}}
+{"ts": 4.4184, "type": "frame", "data": {"frame_id": 18, "width": 640, "height": 480}}
+{"ts": 4.8856, "type": "heartbeat", "data": {"seq": 19, "cpu": 40.25}}
+{"ts": 5.3768, "type": "click", "data": {"x": 859, "y": 74}}
+{"ts": 5.6816, "type": "frame", "data": {"frame_id": 21, "width": 640, "height": 480}}
+{"ts": 6.0819, "type": "detection", "data": {"class": "cup", "score": 0.451}}
+{"ts": 6.2816, "type": "click", "data": {"x": 241, "y": 137}}
+{"ts": 6.4425, "type": "heartbeat", "data": {"seq": 24, "cpu": 5.82}}
+{"ts": 6.7017, "type": "click", "data": {"x": 363, "y": 698}}
+{"ts": 7.0034, "type": "click", "data": {"x": 1042, "y": 195}}
+{"ts": 7.4968, "type": "frame", "data": {"frame_id": 27, "width": 640, "height": 480}}
+{"ts": 7.7355, "type": "click", "data": {"x": 238, "y": 404}}
+{"ts": 7.9748, "type": "frame", "data": {"frame_id": 29, "width": 640, "height": 480}}

@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @source "./react/**/*.{ts,tsx}";
 @source "./timeline/**/*.{ts,tsx}";
+@source "./preview/**/*.{ts,tsx}";
 
 /*
  * Bind Tailwind's `dark:` variant to `data-theme="dark"`. Consumers flip the

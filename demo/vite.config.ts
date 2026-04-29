@@ -9,6 +9,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@vuer-ai/vuer-m3u/styles.css': resolve(__dirname, '../src/styles.css'),
+      '@vuer-ai/vuer-m3u/preview': resolve(__dirname, '../src/preview/index.ts'),
       '@vuer-ai/vuer-m3u': resolve(__dirname, '../src/index.ts'),
     },
   },

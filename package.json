@@ -12,6 +12,11 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
+    "./preview": {
+      "types": "./dist/preview/index.d.ts",
+      "import": "./dist/preview.js",
+      "require": "./dist/preview.cjs"
+    },
     "./styles.css": "./src/styles.css"
   },
   "sideEffects": ["*.css"],
@@ -63,8 +68,12 @@
     "react-dom": { "optional": true }
   },
   "dependencies": {
+    "@mcap/core": "^2.0.0",
+    "highlight.js": "^11.10.0",
     "hls.js": "^1.5.0",
-    "lru-cache": "^11.0.0"
+    "lru-cache": "^11.0.0",
+    "react-markdown": "^9.0.0",
+    "remark-gfm": "^4.0.0"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <radialGradient id="grad" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#1e1b4b" />
+    </radialGradient>
+  </defs>
+  <rect width="200" height="200" fill="#0f172a" />
+  <circle cx="100" cy="100" r="70" fill="url(#grad)" stroke="#a5b4fc" stroke-width="3" />
+  <text x="100" y="108" font-family="sans-serif" font-size="20" fill="#f1f5f9" text-anchor="middle">vuer-m3u</text>
+</svg>

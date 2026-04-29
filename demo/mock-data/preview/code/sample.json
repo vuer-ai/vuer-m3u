@@ -1,0 +1,20 @@
+{
+  "name": "vuer-m3u-preview-fixture",
+  "version": "0.1.0",
+  "description": "Sample JSON document used by the FilePreview demo route.",
+  "tags": ["demo", "preview", "json"],
+  "config": {
+    "playbackRate": 1.0,
+    "loop": false,
+    "tracks": [
+      { "id": "video", "kind": "video", "url": "/video/playlist.m3u8" },
+      { "id": "annotations", "kind": "jsonl", "url": "/annotations/playlist.m3u8" },
+      { "id": "imu", "kind": "imu", "url": "/imu/playlist.m3u8" }
+    ]
+  },
+  "metrics": {
+    "samples": 12345,
+    "duration_s": 67.89,
+    "ok": true
+  }
+}

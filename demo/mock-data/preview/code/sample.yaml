@@ -1,0 +1,37 @@
+# Sample YAML config used by the FilePreview demo route.
+name: vuer-m3u-preview-fixture
+version: 0.1.0
+description: |
+  Multi-line description block. YAML is rendered through the
+  generic code previewer (highlight.js).
+
+playback:
+  rate: 1.0
+  loop: false
+  fps: 30
+
+tracks:
+  - id: video
+    kind: video
+    url: /video/playlist.m3u8
+  - id: annotations
+    kind: jsonl
+    url: /annotations/playlist.m3u8
+  - id: imu
+    kind: imu
+    url: /imu/playlist.m3u8
+    channels:
+      - accel.x
+      - accel.y
+      - accel.z
+      - gyro.x
+      - gyro.y
+      - gyro.z
+
+flags:
+  prefetch: true
+  cache_size_mb: 64
+  decoders:
+    - jsonl
+    - vtt
+    - npy
